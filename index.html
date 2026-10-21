@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinoteatr – onlayn bilet (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{--bg:#1c0b14;--panel:#2a1220;--line:#4a2438;--text:#f6ead9;--mute:#b99aa6;--brass:#e0aa4a;--seat:#6b2a42;--sold:#3a2430;--ok:#6fcf97;--bad:#ff7b7b}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 Figtree,system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+h1,h2,h3{font-family:"Bodoni Moda",Georgia,serif;margin:0;line-height:1.15}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:8px}
+header h1{font-size:1.5rem;color:var(--brass)}
+nav button{background:none;border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:6px;font:inherit;cursor:pointer}
+nav button.on{border-color:var(--brass);color:var(--brass)}
+main{max-width:860px;margin:0 auto;padding:20px}
+.demo{background:var(--panel);border-left:3px solid var(--brass);padding:10px 14px;font-size:.9rem;color:var(--mute);margin-bottom:20px}
+.film{border-top:1px solid var(--line);padding:20px 0}
+.film h2{font-size:1.8rem}
+.film p{color:var(--mute);margin:4px 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.row b{min-width:64px;font-weight:600}
+.chip{background:var(--panel);color:var(--text);border:1px solid var(--line);padding:8px 12px;border-radius:6px;font:inherit;cursor:pointer;min-height:44px}
+.chip:hover,.chip:focus-visible{border-color:var(--brass);outline:none}
+.chip small{color:var(--mute);margin-left:6px}
+.btn{background:var(--brass);color:#1c0b14;border:0;padding:12px 22px;border-radius:6px;font:600 1rem Figtree,sans-serif;cursor:pointer;min-height:44px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;font:inherit;padding:8px 0}
+.hidden{display:none}
+.screen{height:6px;border-radius:50%;background:linear-gradient(90deg,transparent,var(--brass),transparent);margin:18px 10% 6px}
+.cap{text-align:center;color:var(--mute);font-size:.85rem;margin-bottom:14px}
+.hall{overflow-x:auto;padding-bottom:8px}
+.grid{display:inline-block;min-width:100%;text-align:center}
+.srow{display:flex;justify-content:center;align-items:center;gap:5px;margin:5px 0}
+.lab{width:20px;color:var(--mute);font-size:.8rem}
+.seat{width:30px;height:30px;border-radius:7px 7px 3px 3px;border:0;background:var(--seat);color:var(--text);font-size:.7rem;cursor:pointer}
+.seat:hover{background:#8a3a58}
+.seat:focus-visible{outline:2px solid var(--brass)}
+.seat.sold{background:var(--sold);color:#6b5560;cursor:not-allowed}
+.seat.sel{background:var(--brass);color:#1c0b14;font-weight:600}
+.gap{width:16px}
+.legend{display:flex;gap:16px;justify-content:center;font-size:.85rem;color:var(--mute);margin:12px 0;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+.bar{position:sticky;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:16px -20px -20px}
+.timer{color:var(--brass);font-variant-numeric:tabular-nums}
+label{display:block;margin:12px 0 4px;color:var(--mute);font-size:.9rem}
+input{width:100%;max-width:360px;padding:11px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+input:focus-visible{outline:2px solid var(--brass)}
+.two{display:flex;gap:10px;max-width:360px}
+.sum{background:var(--panel);padding:14px;border-radius:8px;margin:12px 0;max-width:360px}
+.ticket{background:var(--text);color:#1c0b14;max-width:340px;margin:16px auto;border-radius:12px;overflow:hidden}
+.ticket .top{padding:18px}
+.ticket h3{font-size:1.5rem}
+.ticket .cut{border-top:2px dashed #b99aa6;margin:0 14px}
+.ticket .qr{padding:16px;text-align:center}
+.ticket .qr svg,.ticket .qr img{width:150px;height:150px}
+.ticket code{display:block;font:600 1.1rem monospace;letter-spacing:.08em;margin-top:6px}
+.res{padding:14px;border-radius:8px;margin-top:14px;max-width:360px}
+.res.ok{background:#173a28;color:var(--ok)}.res.bad{background:#3d1717;color:var(--bad)}
+@media(max-width:480px){.seat{width:25px;height:25px;font-size:.6rem}.srow{gap:3px}.gap{width:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kinoteatr</h1>
+  <nav><button id="n1" class="on" onclick="show('buy')">Bilet al</button> <button id="n2" onclick="show('scan')">Giriş nəzarəti</button></nav>
+</header>
+<main>
+<div class="demo">Demo versiya: ödəniş saxtadır, məlumat yalnız bu brauzerdə saxlanır. Real satış üçün server və bank inteqrasiyası lazımdır.</div>
+
+<section id="buy">
+  <div id="s1"></div>
+  <div id="s2" class="hidden">
+    <button class="link" onclick="go(1)">← Seansları göstər</button>
+    <h2 id="t2"></h2>
+    <div class="screen"></div><div class="cap">Ekran</div>
+    <div class="hall"><div class="grid" id="grid"></div></div>
+    <div class="legend"><span><i style="background:var(--seat)"></i>Boş</span><span><i style="background:var(--brass)"></i>Seçilib</span><span><i style="background:var(--sold)"></i>Satılıb</span></div>
+    <div class="bar"><div><span id="picked">Yer seçilməyib</span><br><span class="timer" id="timer"></span></div><button class="btn" id="toPay" disabled onclick="go(3)">Ödənişə keç</button></div>
+  </div>
+  <div id="s3" class="hidden">
+    <button class="link" onclick="go(2)">← Yerləri dəyiş</button>
+    <h2>Ödəniş</h2>
+    <div class="sum" id="sum"></div>
+    <label for="em">E-poçt</label><input id="em" type="email" placeholder="ad@mail.az">
+    <label for="cn">Kart nömrəsi (demo)</label><input id="cn" inputmode="numeric" value="4111 1111 1111 1111">
+    <div class="two"><div><label for="ex">Bitmə tarixi</label><input id="ex" value="12/28"></div><div><label for="cv">CVV</label><input id="cv" value="123"></div></div>
+    <p><button class="btn" id="payBtn" onclick="pay()">Ödə</button></p>
+  </div>
+  <div id="s4" class="hidden">
+    <h2>Ödəniş uğurludur</h2>
+    <p style="color:var(--mute)">Biletlər e-poçta göndərilir. Girişdə QR kodu göstərin.</p>
+    <div id="tickets"></div>
+    <button class="btn" onclick="go(1)">Yeni bilet al</button>
+  </div>
+</section>
+
+<section id="scan" class="hidden">
+  <h2>Giriş nəzarəti</h2>
+  <p style="color:var(--mute)">Real sistemdə bu səhifə telefon kamerası ilə QR oxuyacaq. Demoda bilet kodunu daxil edin.</p>
+  <label for="code">Bilet kodu</label><input id="code" placeholder="KN-XXXXXX">
+  <p><button class="btn" onclick="check()">Yoxla</button></p>
+  <div id="result"></div>
+</section>
+</main>
+
+<script>
+const FILMS=[
+ {t:"Xəzər küləyi",d:"Dram · 112 dəq · 12+",s:[["11:00","B"],["15:30","A"],["19:00","A"],["21:45","B"]]},
+ {t:"Son qatar",d:"Triller · 98 dəq · 16+",s:[["12:30","A"],["17:00","B"],["20:15","A"],["22:30","B"]]},
+ {t:"Kiçik ulduz",d:"Animasiya · 90 dəq · 0+",s:[["10:00","B"],["13:00","A"],["16:00","A"]]}
+];
+const HALLS={A:{name:"Zal 1",rows:8,price:8},B:{name:"Zal 2",rows:5,price:10}}; // 80 və 50 yer
+const COLS=10, ROWS="ABCDEFGH";
+const DAYS=[0,1,2].map(i=>{const d=new Date();d.setDate(d.getDate()+i);return {k:d.toISOString().slice(0,10),l:i==0?"Bu gün":i==1?"Sabah":d.toLocaleDateString("az",{day:"numeric",month:"long"})}});
+let cur=null,sel=new Set(),hold=null,left=0,tick=null;
+
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+const mem={sold:{},tix:{}};
+const sold=()=>store("kn_sold")||mem.sold, tix=()=>store("kn_tix")||mem.tix;
+function save(k,v,m){mem[m]=v;store(k,v)}
+
+function rnd(str){let h=2166136261;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return()=>{h^=h<<13;h^=h>>>17;h^=h<<5;return(h>>>0)/4294967296}}
+function taken(key){const r=rnd(key),H=HALLS[key.split("|")[3]],set=new Set();
+  for(let i=0;i<H.rows;i++)for(let j=1;j<=COLS;j++)if(r()<.25)set.add(ROWS[i]+j);
+  (sold()[key]||[]).forEach(x=>set.add(x));return set}
+
+function show(v){["buy","scan"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!=v));
+  n1.classList.toggle("on",v=="buy");n2.classList.toggle("on",v=="scan")}
+function go(n){[1,2,3,4].forEach(i=>document.getElementById("s"+i).classList.toggle("hidden",i!=n));
+  if(n==1){clearHold();sel.clear();cur=null}window.scrollTo(0,0)}
+
+function home(){
+  s1.innerHTML=FILMS.map((f,i)=>`<div class="film"><h2>${f.t}</h2><p>${f.d}</p>`+
+   DAYS.map(d=>`<div class="row"><b>${d.l}</b>`+f.s.map(([tm,h])=>
+    `<button class="chip" onclick="pick(${i},'${d.k}','${d.l}','${tm}','${h}')">${tm}<small>${HALLS[h].name} · ${HALLS[h].price} ₼</small></button>`).join("")+`</div>`).join("")+`</div>`).join("");
+}
+function pick(i,k,dl,tm,h){cur={film:FILMS[i].t,key:[i,k,tm,h].join("|"),day:dl,time:tm,hall:h};sel.clear();
+  t2.textContent=`${cur.film} · ${dl}, ${tm} · ${HALLS[h].name}`;drawGrid();upd();go(2)}
+
+function drawGrid(){const H=HALLS[cur.hall],tk=taken(cur.key);let h="";
+  for(let i=0;i<H.rows;i++){h+=`<div class="srow"><span class="lab">${ROWS[i]}</span>`;
+   for(let j=1;j<=COLS;j++){const id=ROWS[i]+j,s=tk.has(id);
+    h+=`<button class="seat ${s?"sold":sel.has(id)?"sel":""}" ${s?"disabled":""} aria-label="Sıra ${ROWS[i]}, yer ${j}" onclick="toggle('${id}')">${j}</button>`;
+    if(j==COLS/2)h+='<span class="gap"></span>'}
+   h+=`<span class="lab"></span></div>`}
+  grid.innerHTML=h}
+
+function toggle(id){
+  if(sel.has(id))sel.delete(id);else{if(sel.size>=6){alert("Bir sifarişdə maksimum 6 yer seçmək olar.");return}sel.add(id)}
+  if(sel.size&&!hold)startHold();if(!sel.size)clearHold();
+  drawGrid();upd()}
+function upd(){const n=sel.size,p=HALLS[cur.hall].price;
+  picked.textContent=n?`${[...sel].sort().join(", ")} · ${n*p} ₼`:"Yer seçilməyib";toPay.disabled=!n}
+function startHold(){left=600;hold=1;tick=setInterval(()=>{left--;
+  timer.textContent=`Yerlər ${Math.floor(left/60)}:${String(left%60).padStart(2,"0")} saxlanılır`;
+  if(left<=0){clearHold();sel.clear();drawGrid();upd();alert("Vaxt bitdi, yerlər buraxıldı. Yenidən seçin.")}},1000);
+  timer.textContent="Yerlər 10:00 saxlanılır"}
+function clearHold(){clearInterval(tick);hold=null;timer.textContent=""}
+
+function pay(){
+  if(!/^\S+@\S+\.\S+$/.test(em.value)){alert("E-poçt ünvanını düzgün yazın.");em.focus();return}
+  payBtn.disabled=true;payBtn.textContent="Ödəniş emal olunur…";
+  setTimeout(()=>{
+    const S=sold(),T=tix(),seats=[...sel].sort();
+    S[cur.key]=[...(S[cur.key]||[]),...seats];save("kn_sold",S,"sold");
+    const out=seats.map(s=>{const c="KN-"+Math.random().toString(36).slice(2,8).toUpperCase();
+      T[c]={film:cur.film,day:cur.day,time:cur.time,hall:HALLS[cur.hall].name,seat:s,used:false};return c});
+    save("kn_tix",T,"tix");clearHold();
+    tickets.innerHTML=out.map(c=>{const t=T[c],q=qrcode(0,"M");q.addData(c);q.make();
+      return `<div class="ticket"><div class="top"><h3>${t.film}</h3><div>${t.day}, ${t.time}</div><div>${t.hall} · Yer ${t.seat}</div></div><div class="cut"></div><div class="qr">${q.createSvgTag(4,0)}<code>${c}</code></div></div>`}).join("");
+    payBtn.disabled=false;payBtn.textContent="Ödə";sel.clear();go(4)},1200)}
+
+function check(){const c=code.value.trim().toUpperCase(),T=tix(),t=T[c];
+  if(!t)result.innerHTML='<div class="res bad">Bilet tapılmadı. Kodu yoxlayın.</div>';
+  else if(t.used)result.innerHTML=`<div class="res bad">Bu bilet artıq istifadə olunub.<br>${t.film}, yer ${t.seat}</div>`;
+  else{t.used=true;save("kn_tix",T,"tix");result.innerHTML=`<div class="res ok">Keçərli. Giriş icazəlidir.<br>${t.film} · ${t.day}, ${t.time} · ${t.hall} · Yer ${t.seat}</div>`}}
+
+sum_=()=>{};
+const _go=go;go=function(n){if(n==3){const p=HALLS[cur.hall].price,k=sel.size;
+  sum.innerHTML=`<b>${cur.film}</b><br>${cur.day}, ${cur.time} · ${HALLS[cur.hall].name}<br>Yerlər: ${[...sel].sort().join(", ")}<br><b>Cəmi: ${k*p} ₼</b>`}
+  _go(n)};
+home();
+</script>
+</body>
+</html>
